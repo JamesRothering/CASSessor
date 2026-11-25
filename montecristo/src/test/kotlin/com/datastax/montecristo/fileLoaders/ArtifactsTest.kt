@@ -288,6 +288,18 @@ internal class ArtifactsTest() {
     }
 
     @Test
+    fun loadNtpFallsBackToDsCollectorChronyPath() {
+        val node = tempFolder.newFolder("node1")
+        // ds-collector runs ntpq -p as an optional command, leaving an empty file on chrony-only hosts
+        writeNodeFile(node, "network/ntpq-p.txt", "")
+        writeNodeFile(node, "network/chrony/sources.txt", chronyFixture("chronyc-sources-v-ubuntu-24.04.txt"))
+        val loadErrors = mutableListOf<LoadError>()
+        val ntp = Artifacts("/").loadNtp(node, "node1", loadErrors)
+        assertThat(ntp).isEqualTo(Ntp("*prod-ntp-4.ntp4.ps5.cano>", 64, -0.466, null))
+        assertThat(loadErrors).isEmpty()
+    }
+
+    @Test
     fun loadNtpReportsMissingNtpqWhenNeitherFileExists() {
         val node = tempFolder.newFolder("node1")
         val loadErrors = mutableListOf<LoadError>()

@@ -344,11 +344,11 @@ class Artifacts(
     internal fun loadNtp(fp: File, hostname: String, loadErrors: MutableList<LoadError>): Ntp {
         val noNtp = Ntp("UNKNOWN_SERVER", null, null, null)
         val ntpqFiles = listOf("network/ntpq-p", "os/ntpq_p", "os-metrics/ntpq_p")
-        val chronyFiles = listOf("os/chronyc_sources")
+        val chronyFiles = listOf("network/chrony/sources", "os/chronyc_sources")
         if (!FileHelpers.getFile(fp, chronyFiles).exists()) {
             return loadViaParser(fp, ntpqFiles, NtpParser, hostname, loadErrors, noNtp)
         }
-        // On chrony hosts the ntpq file may still be collected, holding only an error, so fall back
+        // On chrony hosts the ntpq file may still be collected, empty or holding only an error, so fall back
         // to chronyc whenever ntpq does not yield a selected peer.
         val ntpq = loadViaParser(fp, ntpqFiles, NtpParser, hostname, mutableListOf(), noNtp)
         if (ntpq.server != noNtp.server) {

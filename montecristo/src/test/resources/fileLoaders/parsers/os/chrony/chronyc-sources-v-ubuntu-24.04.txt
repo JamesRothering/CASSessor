@@ -1,0 +1,19 @@
+
+  .-- Source mode  '^' = server, '=' = peer, '#' = local clock.
+ / .- Source state '*' = current best, '+' = combined, '-' = not combined,
+| /             'x' = may be in error, '~' = too variable, '?' = unusable.
+||                                                 .- xxxx [ yyyy ] +/- zzzz
+||      Reachability register (octal) -.           |  xxxx = adjusted offset,
+||      Log2(Polling interval) --.      |          |  yyyy = measured offset,
+||                                \     |          |  zzzz = estimated error.
+||                                 |    |           \
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^- prod-ntp-3.ntp1.ps5.cano>     2   6    17    16   -765us[ -765us] +/-   46ms
+^+ prod-ntp-5.ntp1.ps5.cano>     2   6    17    17   -303us[ -837us] +/-   43ms
+^+ alphyn.canonical.com          2   6    17    18   +546us[  +12us] +/-   34ms
+^* prod-ntp-4.ntp4.ps5.cano>     2   6    17    17   -466us[-1001us] +/-   46ms
+^- tundra.txryan.com             2   6    17    17  -1623us[-1623us] +/-   16ms
+^+ ntp.ny1.neptunenetworks.>     2   6    17    17   -271us[ -805us] +/-   51ms
+^+ ntps2-01.bji01.0150n.net      2   6    17    18   +476us[  -59us] +/-   55ms
+^+ time.0150n.net                2   6    17    18   -320us[ -855us] +/-   38ms

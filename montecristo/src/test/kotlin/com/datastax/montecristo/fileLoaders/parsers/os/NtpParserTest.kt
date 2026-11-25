@@ -46,6 +46,12 @@ internal class NtpParserTest {
     }
 
     @Test
+    fun testChronyVerboseLegendIgnored() {
+        val ntp = parseResource("chronyc-sources-v-ubuntu-24.04.txt")
+        assertThat(ntp).isEqualTo(Ntp("*prod-ntp-4.ntp4.ps5.cano>", 64, -0.466, null))
+    }
+
+    @Test
     fun testChronyUbuntu2204TruncatedName() {
         val ntp = parseResource("chronyc-sources-ubuntu-22.04.txt")
         assertThat(ntp).isEqualTo(Ntp("*prod-ntp-4.ntp4.ps5.cano>", 1024, -0.038, null))
