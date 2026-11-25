@@ -1,0 +1,8 @@
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^+ prod-ntp-3.ntp1.ps5.cano>     2  10   377   612   +213us[ +245us] +/-   32ms
+^* prod-ntp-4.ntp4.ps5.cano>     2  10   377   427    -38us[  -14us] +/-   31ms
+^+ prod-ntp-5.ntp1.ps5.cano>     2  10   377   893   +631us[ +655us] +/-   35ms
+^+ alphyn.canonical.com          2  10   377   274   -412us[ -412us] +/-   27ms
+^- time.cloudflare.com           3  10   377   550  +1187us[+1211us] +/-   18ms
+^- ntp1.hetzner.de               2  10   377   181  +2804us[+2804us] +/-   41ms

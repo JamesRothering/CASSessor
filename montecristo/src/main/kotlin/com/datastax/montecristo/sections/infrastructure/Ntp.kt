@@ -32,8 +32,8 @@ class Ntp : DocumentSection {
 
     /**
     Ntp is examined:
-    - there should be ntpd in ps output
-    - in the ntpq the servers should be different, the poll should be the same, plus we grab jitter an offset
+    - there should be ntpd or chronyd in ps output
+    - in the ntpq / chronyc output the servers should be different, the poll should be the same, plus we grab jitter an offset
      */
 
     override fun getDocument(
@@ -44,7 +44,8 @@ class Ntp : DocumentSection {
     ): String {
         val args = super.createDocArgs(cluster)
         val nodesWithoutNtp = cluster.nodes.filter {
-            !it.osConfiguration.psAux.data.joinToString("\n").contains("ntpd")
+            val psAux = it.osConfiguration.psAux.data.joinToString("\n")
+            !psAux.contains("ntpd") && !psAux.contains("chronyd")
         }
 
         // examine ps output
@@ -58,7 +59,7 @@ class Ntp : DocumentSection {
                     .map { it.hostname }
                     .sorted()
                     .forEach { ntpdStatus.append("$it\n") }
-            recs.immediate(RecommendationType.INFRASTRUCTURE,"The NTP daemon (ntpd) was not detected running on all nodes in the cluster. Out of sync clocks in a Cassandra cluster can lead to inconsistencies that can be hard to diagnose. It is critical having ntpd running on all nodes in the cluster with monitoring and alerting of clock drift. We recommend verifying this.")
+            recs.immediate(RecommendationType.INFRASTRUCTURE,"The NTP daemon (ntpd or chronyd) was not detected running on all nodes in the cluster. Out of sync clocks in a Cassandra cluster can lead to inconsistencies that can be hard to diagnose. It is critical having ntpd or chronyd running on all nodes in the cluster with monitoring and alerting of clock drift. We recommend verifying this.")
         }
 
         val recentServerNames = StringBuilder()

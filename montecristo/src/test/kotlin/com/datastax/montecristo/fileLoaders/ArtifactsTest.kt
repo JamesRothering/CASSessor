@@ -20,14 +20,34 @@ import com.datastax.montecristo.commands.DiscoveryArgs
 import com.datastax.montecristo.helpers.Utils
 import com.datastax.montecristo.model.LoadError
 import com.datastax.montecristo.model.nodetool.GossipInfo
+import com.datastax.montecristo.model.os.Ntp
 import com.datastax.montecristo.model.versions.DatabaseVersion
 import com.datastax.montecristo.testHelpers.ObjectCreators
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
 
 internal class ArtifactsTest() {
+
+    @get:Rule
+    val tempFolder = TemporaryFolder()
+
+    private val ntpqOutput = "     remote           refid      st t when poll reach   delay   offset  jitter\n" +
+            "==============================================================================\n" +
+            "*somewhere.isp.uk .LOCL.           1 u  979 1024  377    0.903   -0.199   0.434\n"
+
+    private fun chronyFixture(name: String): String =
+        this.javaClass.getResourceAsStream("/fileLoaders/parsers/os/chrony/$name").reader().readText()
+
+    private fun writeNodeFile(node: File, path: String, contents: String) {
+        val file = File(node, path)
+        file.parentFile.mkdirs()
+        file.writeText(contents)
+    }
 
     @Test
     fun determineVersionNormal() {
@@ -235,5 +255,44 @@ internal class ArtifactsTest() {
         assertThat(loadErrors.size).isEqualTo(0)
     }
 
+    @Test
+    fun loadNtpFromNtpq() {
+        val node = tempFolder.newFolder("node1")
+        writeNodeFile(node, "os/ntpq_p", ntpqOutput)
+        writeNodeFile(node, "os/chronyc_sources", chronyFixture("chronyc-sources-rhel-9.txt"))
+        val loadErrors = mutableListOf<LoadError>()
+        val ntp = Artifacts("/").loadNtp(node, "node1", loadErrors)
+        assertThat(ntp).isEqualTo(Ntp("*somewhere.isp.uk", 1024, -0.199, 0.434))
+        assertThat(loadErrors).isEmpty()
+    }
 
+    @Test
+    fun loadNtpFallsBackToChronyWhenNtpqMissing() {
+        val node = tempFolder.newFolder("node1")
+        writeNodeFile(node, "os/chronyc_sources", chronyFixture("chronyc-sources-rhel-9.txt"))
+        val loadErrors = mutableListOf<LoadError>()
+        val ntp = Artifacts("/").loadNtp(node, "node1", loadErrors)
+        assertThat(ntp).isEqualTo(Ntp("*time.cloudflare.com", 256, -1.293, null))
+        assertThat(loadErrors).isEmpty()
+    }
+
+    @Test
+    fun loadNtpFallsBackToChronyWhenNtpqHasNoSelectedPeer() {
+        val node = tempFolder.newFolder("node1")
+        writeNodeFile(node, "os/ntpq_p", "bash: ntpq: command not found\n")
+        writeNodeFile(node, "os/chronyc_sources.txt", chronyFixture("chronyc-sources-ubuntu-24.04.txt"))
+        val loadErrors = mutableListOf<LoadError>()
+        val ntp = Artifacts("/").loadNtp(node, "node1", loadErrors)
+        assertThat(ntp).isEqualTo(Ntp("*ntp.netlinkify.com", 64, -2.446, null))
+        assertThat(loadErrors).isEmpty()
+    }
+
+    @Test
+    fun loadNtpReportsMissingNtpqWhenNeitherFileExists() {
+        val node = tempFolder.newFolder("node1")
+        val loadErrors = mutableListOf<LoadError>()
+        val ntp = Artifacts("/").loadNtp(node, "node1", loadErrors)
+        assertThat(ntp).isEqualTo(Ntp("UNKNOWN_SERVER", null, null, null))
+        assertThat(loadErrors).containsExactly(LoadError("node1", "No ntpq-p file found"))
+    }
 }

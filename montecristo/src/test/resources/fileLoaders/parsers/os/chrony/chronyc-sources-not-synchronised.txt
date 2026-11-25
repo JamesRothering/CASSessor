@@ -1,0 +1,4 @@
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^? 2.rhel.pool.ntp.org           0   6     0     -     +0ns[   +0ns] +/-    0ns
+^? ntp.example.internal          0   6     0     -     +0ns[   +0ns] +/-    0ns

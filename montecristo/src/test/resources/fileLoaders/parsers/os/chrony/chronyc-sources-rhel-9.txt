@@ -1,0 +1,6 @@
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^+ clock.xmission.com            2   8   377    93    +12ms[  +12ms] +/-   74ms
+^* time.cloudflare.com           3   8   377   219  -1293us[-1381us] +/-   13ms
+^- ntp1.wiktel.com               2   8   377   153  +4417us[+4417us] +/-   49ms
+^+ ntp.wdc2.us.leaseweb.net      2   8   377    25  +1837us[+1837us] +/-   38ms

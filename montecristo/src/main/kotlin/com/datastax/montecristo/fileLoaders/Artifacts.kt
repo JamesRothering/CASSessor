@@ -312,7 +312,7 @@ class Artifacts(
         }
 
         val psAux = simpleLoad<PsAux>(fp, listOf("os/ps-aux", "os-metrics/ps-aux"), hostname, loadErrors)
-        val ntp = loadViaParser(fp, listOf("network/ntpq-p", "os/ntpq_p", "os-metrics/ntpq_p"), NtpParser, hostname, loadErrors, Ntp("UNKNOWN_SERVER", null, null, null))
+        val ntp = loadNtp(fp, hostname, loadErrors)
         val env = simpleLoad<Env>(fp, listOf("os/env", "os-metrics/env"), hostname, loadErrors)
 
         // limits, the limits can be in 2 places, depending on package vs tarball, either limits.conf or limits.d/cassandra.conf
@@ -339,6 +339,22 @@ class Artifacts(
         val osVersion = getOSVersion(osInfoLines, osInfoJsonLines, hostname, loadErrors)
         return Configuration(meminfo, sysctl, lscpu, dstat, javaVersion, psAux, ntp, env, ifConfig, osVersion, totalLimits, hugePages)
 
+    }
+
+    internal fun loadNtp(fp: File, hostname: String, loadErrors: MutableList<LoadError>): Ntp {
+        val noNtp = Ntp("UNKNOWN_SERVER", null, null, null)
+        val ntpqFiles = listOf("network/ntpq-p", "os/ntpq_p", "os-metrics/ntpq_p")
+        val chronyFiles = listOf("os/chronyc_sources")
+        if (!FileHelpers.getFile(fp, chronyFiles).exists()) {
+            return loadViaParser(fp, ntpqFiles, NtpParser, hostname, loadErrors, noNtp)
+        }
+        // On chrony hosts the ntpq file may still be collected, holding only an error, so fall back
+        // to chronyc whenever ntpq does not yield a selected peer.
+        val ntpq = loadViaParser(fp, ntpqFiles, NtpParser, hostname, mutableListOf(), noNtp)
+        if (ntpq.server != noNtp.server) {
+            return ntpq
+        }
+        return loadViaParser(fp, chronyFiles, NtpParser, hostname, loadErrors, noNtp)
     }
 
     private fun loadStorage(fp : File, hostname : String, loadErrors: MutableList<LoadError>) : Storage {

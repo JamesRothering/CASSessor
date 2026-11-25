@@ -1,0 +1,10 @@
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^- prod-ntp-5.ntp4.ps5.cano>     2   6    17    12  +1559us[+1559us] +/-   44ms
+^- prod-ntp-4.ntp1.ps5.cano>     2   6    17    12  +1660us[+1660us] +/-   47ms
+^- prod-ntp-3.ntp4.ps5.cano>     2   6    17    13  +3383us[+3483us] +/-   49ms
+^+ alphyn.canonical.com          2   6    17    13  +1552us[+1652us] +/-   34ms
+^+ 23-131-76-162.rev.nulled>     2   6    17    14  +1602us[+1701us] +/-   17ms
+^- 129.146.161.245               2   6   161     6   -597us[ -597us] +/-   51ms
+^- 172-232-15-202.ip.linode>     2   6    17    13   +563us[ +663us] +/-   64ms
+^* ntp.netlinkify.com            2   6    17    13  -2446us[-2346us] +/-   13ms

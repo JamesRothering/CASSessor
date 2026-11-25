@@ -158,7 +158,7 @@ internal class NtpTest {
         // check the template, and that there is 1 recommendation
         assertThat(recs.size).isEqualTo(1)
         assertThat(recs.first().priority).isEqualTo(RecommendationPriority.IMMEDIATE)
-        assertThat(recs.first().longForm).isEqualTo("The NTP daemon (ntpd) was not detected running on all nodes in the cluster. Out of sync clocks in a Cassandra cluster can lead to inconsistencies that can be hard to diagnose. It is critical having ntpd running on all nodes in the cluster with monitoring and alerting of clock drift. We recommend verifying this.")
+        assertThat(recs.first().longForm).isEqualTo("The NTP daemon (ntpd or chronyd) was not detected running on all nodes in the cluster. Out of sync clocks in a Cassandra cluster can lead to inconsistencies that can be hard to diagnose. It is critical having ntpd or chronyd running on all nodes in the cluster with monitoring and alerting of clock drift. We recommend verifying this.")
         assertThat(template).isEqualTo(badTemplateResult)
     }
 
@@ -186,5 +186,29 @@ internal class NtpTest {
         val template = ntpSection.getDocument(cluster, searcher, recs,ExecutionProfile.default())
         assertThat(recs.size).isEqualTo(1)
         assertThat(recs[0].shortForm).isEqualTo("We recommend using the same polling interval on every node.")
+    }
+
+    @Test
+    fun getDocumentChronyRunning() {
+        val psAuxChrony = "root      1459  0.0  0.0  26512  1952 ?        Ss   Jul24   8:05 /usr/lib/systemd/systemd-logind\n" +
+                "chrony     812  0.0  0.0  84560  3328 ?        S    Jul24   0:04 /usr/sbin/chronyd -F 2\n"
+        val chronyData = "MS Name/IP address         Stratum Poll Reach LastRx Last sample\n" +
+                "===============================================================================\n" +
+                "^* time.cloudflare.com           3   8   377   219  -1293us[-1381us] +/-   13ms\n"
+
+        val config1 = mockk<Configuration>(relaxed = true)
+        every { config1.psAux.data } returns psAuxChrony.split("\n")
+        every { config1.ntp } returns NtpParser.parse(chronyData.split("\n"))
+        val node1 = ObjectCreators.createNode(nodeName = "node1", config = config1)
+        val searcher = mockk<Searcher>(relaxed = true)
+        val cluster = mockk<Cluster>(relaxed = true)
+        every { cluster.nodes } returns listOf(node1)
+
+        val recs: MutableList<Recommendation> = mutableListOf()
+        val template = Ntp().getDocument(cluster, searcher, recs, ExecutionProfile.default())
+        assertThat(recs).isEmpty()
+        assertThat(template).contains("The ntp process is running everywhere.")
+        assertThat(template).contains("node1 *time.cloudflare.com")
+        assertThat(template).contains("256\t-1.293\tUNKNOWN_JITTER\tnode1")
     }
 }
