@@ -295,7 +295,7 @@ class Artifacts(
         val meminfo = loadViaParser(fp, listOf("os/meminfo", "os-metrics/meminfo"), MemInfoParser, hostname, loadErrors, MemInfo(emptyMap()))
         val sysctl = loadViaParser(fp, listOf("os/sysctl", "os-metrics/sysctl"), SysCtlParser, hostname, loadErrors, Sysctl(emptyMap()))
         val lscpu = loadViaParser(fp, listOf("os/lscpu", "os-metrics/lscpu"), LsCpuParser, hostname, loadErrors, LsCpu(emptyMap<String, String>()))
-        val ifConfig = loadViaParser(fp, listOf("os/ifconfig", "os-metrics/ifconfig"), IfConfigParser, hostname, loadErrors, IfConfig(emptyMap<String, String>()))
+        val ifConfig = loadViaParser(fp, listOf("os/ifconfig", "os-metrics/ifconfig", "os/ip_addr"), IfConfigParser, hostname, loadErrors, IfConfig(emptyMap<String, String>()))
 
         val dstat = loadViaParser(fp, listOf("storage/dstat"), DstatParser, hostname, loadErrors, DStat(emptyList()))
 

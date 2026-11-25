@@ -1,0 +1,8 @@
+1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+1: lo    inet6 ::1/128 scope host \       valid_lft forever preferred_lft forever
+2: ens192    inet 10.20.30.41/24 brd 10.20.30.255 scope global noprefixroute ens192\       valid_lft forever preferred_lft forever
+2: ens192    inet 10.20.30.50/24 brd 10.20.30.255 scope global secondary noprefixroute ens192:1\       valid_lft forever preferred_lft forever
+2: ens192    inet6 fe80::250:56ff:fe8a:1b2c/64 scope link noprefixroute \       valid_lft forever preferred_lft forever
+3: ens224    inet 192.168.50.41/24 brd 192.168.50.255 scope global noprefixroute ens224\       valid_lft forever preferred_lft forever
+3: ens224    inet6 fe80::250:56ff:fe8a:7d10/64 scope link noprefixroute \       valid_lft forever preferred_lft forever
+4: ens256    inet6 fe80::250:56ff:fe8a:42e1/64 scope link noprefixroute \       valid_lft forever preferred_lft forever

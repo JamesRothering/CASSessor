@@ -19,10 +19,24 @@ package com.datastax.montecristo.fileLoaders.parsers.os
 import com.datastax.montecristo.fileLoaders.parsers.IFileParser
 import com.datastax.montecristo.model.os.IfConfig
 
+/**
+ * Parses either `ifconfig` output or `ip -o addr show` output (the format is detected automatically),
+ * mapping each interface name to its first IPv4 address, or null if it has none.
+ */
 object IfConfigParser : IFileParser<IfConfig> {
 
-    override fun parse(data: List<String>): IfConfig {
+    // e.g. "2: ens192    inet 10.20.30.41/24 brd 10.20.30.255 scope global noprefixroute ens192\       valid_lft forever preferred_lft forever"
+    private val ipAddrLineRegex = Regex("^\\d+:\\s+(\\S+)\\s+(inet6?)\\s+(\\S+)(.*)$")
 
+    override fun parse(data: List<String>): IfConfig {
+        return if (data.any { ipAddrLineRegex.matches(it.trim()) }) {
+            parseIpAddr(data)
+        } else {
+            parseIfConfig(data)
+        }
+    }
+
+    private fun parseIfConfig(data: List<String>): IfConfig {
         // ifconfig is split into interfaces separated by a blank line, so the first job is to split the
         // overall list<string> into a set of strings, 1 per interface so they can be processed in turn.
         // rejoin to a single string then split by the double new line which occurs due to the blank line
@@ -39,6 +53,30 @@ object IfConfigParser : IFileParser<IfConfig> {
                 val inetAddress = inetRegex.find(it)?.groups?.get(0)?.value?.split(" ")?.get(1)
                 Pair(interfaceName, inetAddress)
             }
+        return IfConfig(bindingData)
+    }
+
+    private fun parseIpAddr(data: List<String>): IfConfig {
+        // one line per address; an interface with several addresses appears on several lines, and an
+        // interface without any address does not appear at all.
+        val bindingData = LinkedHashMap<String, String?>()
+        data.mapNotNull { ipAddrLineRegex.matchEntire(it.trim()) }.forEach { match ->
+            val (interfaceName, family, address, rest) = match.destructured
+            if (family == "inet") {
+                val ipv4 = address.substringBefore("/")
+                if (bindingData[interfaceName] == null) {
+                    bindingData[interfaceName] = ipv4
+                }
+                // the address label is the last token before the "\" separator. An alias such as "ens192:1"
+                // is reported as its own interface by ifconfig, so expose it the same way here.
+                val label = rest.substringBefore("\\").trim().split(Regex("\\s+")).last()
+                if (label.startsWith("$interfaceName:") && bindingData[label] == null) {
+                    bindingData[label] = ipv4
+                }
+            } else if (!bindingData.containsKey(interfaceName)) {
+                bindingData[interfaceName] = null
+            }
+        }
         return IfConfig(bindingData)
     }
 }
